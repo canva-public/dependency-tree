@@ -1,28 +1,28 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
-import * as bim from "builtin-modules";
+import * as bim from 'builtin-modules';
 import {
   CachedInputFileSystem,
   NodeJsInputFileSystem,
   ResolverFactory,
-} from "enhanced-resolve";
-import * as fg from "fast-glob";
-import * as fs from "fs";
-import * as path from "path";
-import { FileProcessor } from "./file_processor";
-import { debug as logger } from "./logger";
-import { CssFileProcessor } from "./processors/css";
-import { TSDirectiveProcessor } from "./processors/directive";
-import { TypeScriptFileProcessor } from "./processors/typescript";
-import Resolver = require("enhanced-resolve/lib/Resolver");
-import SyncAsyncFileSystemDecorator = require("enhanced-resolve/lib/SyncAsyncFileSystemDecorator");
-import { AbstractInputFileSystem } from "enhanced-resolve/lib/common-types";
+} from 'enhanced-resolve';
+import * as fg from 'fast-glob';
+import * as fs from 'fs';
+import * as path from 'path';
+import { FileProcessor } from './file_processor';
+import { debug as logger } from './logger';
+import { CssFileProcessor } from './processors/css';
+import { TSDirectiveProcessor } from './processors/directive';
+import { TypeScriptFileProcessor } from './processors/typescript';
+import Resolver = require('enhanced-resolve/lib/Resolver');
+import SyncAsyncFileSystemDecorator = require('enhanced-resolve/lib/SyncAsyncFileSystemDecorator');
+import { AbstractInputFileSystem } from 'enhanced-resolve/lib/common-types';
 
 // This is a set of built-in modules, e.g. `path`, `fs`, etc.
 const builtinModules = new Set(bim);
-const info = logger.extend("info");
-const error = logger.extend("error");
-const debug = logger.extend("debug");
+const info = logger.extend('info');
+const error = logger.extend('error');
+const debug = logger.extend('debug');
 
 export type Path = string;
 export type FileToDeps = Map<Path, Set<Path>>;
@@ -35,7 +35,7 @@ export type ResolverOptionsGenerator = () => Partial<ResolverFactory.ResolverOpt
  */
 export type ReferenceTransformFn = (
   reference: string,
-  sourceFile: string
+  sourceFile: string,
 ) => string[] | string;
 
 export class DependencyTree {
@@ -52,8 +52,8 @@ export class DependencyTree {
   constructor(
     private readonly rootDirs: Path[],
     private readonly resolver = DependencyTree.createResolver(),
-    private readonly ignoreGlobs: string[] = ["**/node_modules/**"],
-    public readonly transformReference: ReferenceTransformFn = (ref) => ref
+    private readonly ignoreGlobs: string[] = ['**/node_modules/**'],
+    public readonly transformReference: ReferenceTransformFn = (ref) => ref,
   ) {
     for (const dir of this.rootDirs) {
       this.addFileProcessor(new TypeScriptFileProcessor(dir));
@@ -71,7 +71,7 @@ export class DependencyTree {
    */
   public static getDependencies(
     fileToDeps: FileToDeps,
-    files: Path[]
+    files: Path[],
   ): Set<Path> {
     const graph = new DirectedGraph(fileToDeps);
     return DependencyTree.findRelatedFiles(graph, files);
@@ -86,7 +86,7 @@ export class DependencyTree {
    */
   public static getReferences(
     fileToDeps: FileToDeps,
-    files: Path[]
+    files: Path[],
   ): Set<Path> {
     // invert the graph because we are interested in the files that *reference* the entrypoint
     // files, rather than the files that the entrypoint files references (which is what
@@ -125,15 +125,15 @@ export class DependencyTree {
    * @returns the resolver
    */
   public static createResolver(
-    generator: ResolverOptionsGenerator = () => ({})
+    generator: ResolverOptionsGenerator = () => ({}),
   ): Resolver {
     const opts: ResolverFactory.ResolverOption = {
       ...generator(),
       fileSystem: (new SyncAsyncFileSystemDecorator(
         (new CachedInputFileSystem(
           new NodeJsInputFileSystem(),
-          4000
-        ) as unknown) as AbstractInputFileSystem
+          4000,
+        ) as unknown) as AbstractInputFileSystem,
       ) as unknown) as AbstractInputFileSystem,
     };
     return ResolverFactory.createResolver(opts);
@@ -165,7 +165,7 @@ export class DependencyTree {
     info(`Found a total of ${files.length} source files`);
 
     for (const file of files) {
-      info("Scanning %s", file);
+      info('Scanning %s', file);
       const importedFiles = await this.getImportedFiles(file, missing, files);
       fileToDeps.set(file, importedFiles);
     }
@@ -190,7 +190,7 @@ export class DependencyTree {
     file: Path,
     referencedModule: string[] | string,
     importedModules: Set<Path>,
-    missingModules: FileToDeps
+    missingModules: FileToDeps,
   ): void {
     if (Array.isArray(referencedModule)) {
       for (const m of referencedModule) {
@@ -199,19 +199,19 @@ export class DependencyTree {
       return;
     }
     if (builtinModules.has(referencedModule)) {
-      debug("%s is a built-in module, ignoring", referencedModule);
+      debug('%s is a built-in module, ignoring', referencedModule);
       return;
     }
     try {
       debug(
-        "trying to resolve %s against %s via enhanced-resolve",
+        'trying to resolve %s against %s via enhanced-resolve',
         referencedModule,
-        file
+        file,
       );
       const resolved = this.resolver.resolveSync(
         {},
         path.dirname(file),
-        referencedModule
+        referencedModule,
       );
       if (resolved) {
         importedModules.add(resolved);
@@ -241,9 +241,9 @@ export class DependencyTree {
   private async getImportedFiles(
     file: Path,
     missing: FileToDeps,
-    files: ReadonlyArray<Path>
+    files: ReadonlyArray<Path>,
   ) {
-    const contents = fs.readFileSync(file, "utf8");
+    const contents = fs.readFileSync(file, 'utf8');
 
     const allImported = new Set<Path>();
     let matched = false;
@@ -255,7 +255,7 @@ export class DependencyTree {
           contents,
           missing,
           files,
-          this
+          this,
         );
         for (const imported of Array.from(importedFiles)) {
           allImported.add(imported);
@@ -279,16 +279,16 @@ export class DependencyTree {
     const supportedFileTypes = new Set(
       this.fileProcessors.reduce(
         (acc, processor) => [...acc, ...processor.supportedFileTypes()],
-        []
-      )
+        [],
+      ),
     );
     return this.rootDirs.reduce<Path[]>((acc: string[], rootDir) => {
       return acc.concat(
-        fg.sync(`**/*.{${Array.from(supportedFileTypes).join(",")}}`, {
+        fg.sync(`**/*.{${Array.from(supportedFileTypes).join(',')}}`, {
           cwd: rootDir,
           ignore: this.ignoreGlobs,
           absolute: true,
-        })
+        }),
       );
     }, []);
   }
@@ -346,7 +346,7 @@ class DirectedGraph<T> {
         if (invertedEdges.has(endpointNode)) {
           assertNonNull(
             invertedEdges.get(endpointNode),
-            "expected outNodes to not be null"
+            'expected outNodes to not be null',
           ).add(node);
         } else {
           invertedEdges.set(endpointNode, new Set([node]));
@@ -413,7 +413,7 @@ class Stack<T> {
   }
 
   next(): T {
-    return assertNonNull(this.stack.pop(), "tried to pop from an empty stack");
+    return assertNonNull(this.stack.pop(), 'tried to pop from an empty stack');
   }
 
   isEmpty(): boolean {

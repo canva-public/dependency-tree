@@ -1,30 +1,30 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
-import { messages } from "cucumber-messages";
-import * as gherkin from "gherkin";
-import * as path from "path";
-import * as ts from "typescript";
-import { FileToDeps, Path } from "../";
-import { debug } from "../logger";
-import { TypeScriptFileProcessor } from "./typescript";
+import { messages } from 'cucumber-messages';
+import * as gherkin from 'gherkin';
+import * as path from 'path';
+import * as ts from 'typescript';
+import { FileToDeps, Path } from '../';
+import { debug } from '../logger';
+import { TypeScriptFileProcessor } from './typescript';
 import IStep = messages.GherkinDocument.Feature.IStep;
 import IEnvelope = messages.IEnvelope;
 
-const logger = debug.extend("feature");
-const info = logger.extend("info");
-const warn = logger.extend("warn");
+const logger = debug.extend('feature');
+const info = logger.extend('info');
+const warn = logger.extend('warn');
 
-const STORIES_IMPORT = "storiesOf";
-const STORIES_PACKAGE = "@storybook/react";
+const STORIES_IMPORT = 'storiesOf';
+const STORIES_PACKAGE = '@storybook/react';
 const STORIES_FILE_RE = new RegExp(`([^${path.sep}]+)\\.stories\\.tsx?$`);
 const STEPS_FILE_RE = new RegExp(`([^${path.sep}]+)\\.steps\\.ts$`);
 const RE_LITERAL_RE = /^\/(.+)\/([gimsuy]*)$/;
-const STEP_DEFININITION_FN_NAMES = ["When", "Then", "Given"];
+const STEP_DEFININITION_FN_NAMES = ['When', 'Then', 'Given'];
 
 export type Storybook = string;
 export type Story = string;
 export type StorybookExtractorFn = (
-  gherkinAssertion: string
+  gherkinAssertion: string,
 ) => [Storybook, Story] | void;
 
 type StorybookMap = Map<Storybook, Set<Path>>;
@@ -36,24 +36,24 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
   constructor(
     rootDir: string,
-    private readonly extractorFn: StorybookExtractorFn
+    private readonly extractorFn: StorybookExtractorFn,
   ) {
     super(rootDir);
   }
 
   private static isRegExpToken(
-    a: ts.Expression
+    a: ts.Expression,
   ): a is ts.RegularExpressionLiteral {
     return (
-      typeof a === "object" &&
-      typeof a.kind !== "undefined" &&
-      typeof ((a as unknown) as Record<string, unknown>).text !== "undefined" &&
+      typeof a === 'object' &&
+      typeof a.kind !== 'undefined' &&
+      typeof ((a as unknown) as Record<string, unknown>).text !== 'undefined' &&
       a.kind === ts.SyntaxKind.RegularExpressionLiteral
     );
   }
 
   private static isImportDeclaration(
-    node: ts.Node
+    node: ts.Node,
   ): node is ts.ImportDeclaration {
     return node.kind === ts.SyntaxKind.ImportDeclaration;
   }
@@ -89,7 +89,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
       namedBindings.elements &&
       namedBindings.elements.some(
         (is: ts.ImportSpecifier) =>
-          (is.name as ts.Identifier).text === STORIES_IMPORT
+          (is.name as ts.Identifier).text === STORIES_IMPORT,
       )
     );
   }
@@ -104,7 +104,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
   private static walkStories(
     sourceFile: ts.SourceFile,
-    callback: (storybook: Storybook) => void
+    callback: (storybook: Storybook) => void,
   ) {
     let importFound = false;
 
@@ -117,7 +117,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
         if (!FeatureFileProcessor.isStringLiteral(firstNode)) {
           // TODO(joscha): we should support composites, etc. as well.
           throw new Error(
-            "Only string literals in storiesOf(...) are supported"
+            'Only string literals in storiesOf(...) are supported',
           );
         }
         callback(firstNode.text);
@@ -145,7 +145,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
   private static walkSteps(
     sourcefile: ts.SourceFile,
-    callback: (re: RegExp) => void
+    callback: (re: RegExp) => void,
   ) {
     const walk = (node: ts.Node) => {
       if (FeatureFileProcessor.isCallExpression(node)) {
@@ -153,7 +153,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           ts.isIdentifier(node.expression) &&
           // It assumed that we have steps defined only by calling following functions names
           STEP_DEFININITION_FN_NAMES.indexOf(
-            node.expression.escapedText as string
+            node.expression.escapedText as string,
           ) !== -1
         ) {
           const arg = node.arguments[0];
@@ -161,8 +161,8 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
             const match = RE_LITERAL_RE.exec(arg.text);
             if (match === null) {
               throw new Error(
-                "Unable to parse TypeScript RegExp literal token. It might be the format was " +
-                  "changed or incorrect change was made to RE_LITERAL_RE."
+                'Unable to parse TypeScript RegExp literal token. It might be the format was ' +
+                  'changed or incorrect change was made to RE_LITERAL_RE.',
               );
             }
             const [, re, flags] = match;
@@ -180,18 +180,18 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     file: Path,
     contents: string,
     missing: FileToDeps,
-    files: ReadonlyArray<Path>
+    files: ReadonlyArray<Path>,
   ): Promise<Set<Path>> {
     const importedFiles = new Set<Path>();
 
     const steps = await this.getSteps(file);
     const referencedStorybookMapping = this.getReferencedStorybookMapping(
-      steps
+      steps,
     );
     const referencedStorybooks = Array.from(referencedStorybookMapping.keys());
 
     if (referencedStorybooks.length > 0) {
-      info("Found references to storybooks %o", referencedStorybooks);
+      info('Found references to storybooks %o', referencedStorybooks);
 
       const storyDefinitions = await this.getStorybookDefinitions(files);
       for (const storybook of referencedStorybooks) {
@@ -201,7 +201,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
             importedFiles.add(tsFile);
           }
         } else {
-          warn("Could not find referenced storybook %s", storybook);
+          warn('Could not find referenced storybook %s', storybook);
           // This is an interpolation for a missing storybook file. From having the dot-notated
           // storybook (e.g. "a.b.c") we only know that the path has to start with "a/b/c/stories/"
           // but we can't deduce the stories filename easily, hence we will put a star there, e.g.
@@ -210,9 +210,9 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           missingFileDeps.add(
             path.join(
               storybook.replace(/\./g, path.sep),
-              "stories",
-              "*.stories.tsx"
-            )
+              'stories',
+              '*.stories.tsx',
+            ),
           );
           missing.set(file, missingFileDeps);
         }
@@ -239,7 +239,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
   }
 
   public supportedFileTypes(): string[] {
-    return ["feature"];
+    return ['feature'];
   }
 
   /**
@@ -249,7 +249,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
    * The passed files array is expected to be stable and never-changing.
    */
   private async getStorybookDefinitions(
-    files: ReadonlyArray<string>
+    files: ReadonlyArray<string>,
   ): Promise<StorybookMap> {
     this.storybookDefinitions =
       this.storybookDefinitions ||
@@ -268,7 +268,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           try {
             const sourceFile = await TypeScriptFileProcessor.createTSSourceFile(
               file,
-              this.compilerOptions.target
+              this.compilerOptions.target,
             );
             FeatureFileProcessor.walkStories(
               sourceFile,
@@ -276,7 +276,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
                 const paths = storybookDefinitions.get(storybook) || new Set();
                 paths.add(file);
                 storybookDefinitions.set(storybook, paths);
-              }
+              },
             );
           } catch (e) {
             reject(e);
@@ -293,7 +293,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
    * files
    */
   private async getStepsDefinitionRegExps(
-    files: ReadonlyArray<Path>
+    files: ReadonlyArray<Path>,
   ): Promise<StepMap> {
     this.stepsDefinitions =
       this.stepsDefinitions ||
@@ -309,7 +309,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
           const sourceFile = await TypeScriptFileProcessor.createTSSourceFile(
             file,
-            this.compilerOptions.target
+            this.compilerOptions.target,
           );
           FeatureFileProcessor.walkSteps(sourceFile, (re: RegExp) => {
             const res: Set<RegExp> =
@@ -338,7 +338,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
       });
 
       let steps: IStep[] = [];
-      stream.on("data", (envelope: IEnvelope) => {
+      stream.on('data', (envelope: IEnvelope) => {
         if (
           envelope.gherkinDocument != null &&
           envelope.gherkinDocument.feature != null &&
@@ -354,8 +354,8 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           }
         }
       });
-      stream.on("error", (err: Error) => reject(err));
-      stream.on("end", () => resolve(steps));
+      stream.on('error', (err: Error) => reject(err));
+      stream.on('end', () => resolve(steps));
     });
   }
 
@@ -366,7 +366,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
    *          referenced by the gherkin file passed
    */
   private getReferencedStorybookMapping(
-    steps: IStep[]
+    steps: IStep[],
   ): Map<Storybook, Set<Story>> {
     const storybooks: Map<Storybook, Set<Story>> = new Map();
 
@@ -378,12 +378,12 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           const [storybook, story] = extracted;
           if (!storybook) {
             throw new Error(
-              `Storybook extraction from "${step.text}" failed, it yielded no storybook`
+              `Storybook extraction from "${step.text}" failed, it yielded no storybook`,
             );
           }
           if (!story) {
             throw new Error(
-              `Storybook extraction from "${step.text}" failed, it yielded no story`
+              `Storybook extraction from "${step.text}" failed, it yielded no story`,
             );
           }
           const book = storybooks.get(storybook) || new Set<Path>();

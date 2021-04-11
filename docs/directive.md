@@ -55,14 +55,14 @@ For the **[TypeScript]** codebase (`['.ts', '.tsx']` file extensions), we utiliz
 /// <dependency-tree depends-on="../../../../../../conf/libraries.ts" />
 
 /// <dependency-tree depends-on="./dep1.sh" />
-resolve(__dirname, "./dep1.sh");
-resolve(__dirname, "./dep2.ts"); /// <dependency-tree depends-on="./dep2.js" />
+resolve(__dirname, './dep1.sh');
+resolve(__dirname, './dep2.ts'); /// <dependency-tree depends-on="./dep2.js" />
 ```
 
 Element's definition can be split into multiple lines:
 
 ```typescript
-resolve(__dirname, "./dep2.ts"); /// <dependency-tree
+resolve(__dirname, './dep2.ts'); /// <dependency-tree
 ///   depends-on="./dep2.js"
 /// />
 ```

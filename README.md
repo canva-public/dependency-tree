@@ -18,7 +18,7 @@ It has built-in file caching and test coverage is ~80%+.
 # Usage
 
 ```ts
-const dependencyTree = new DependencyTree(["/path/to/my/dir"]);
+const dependencyTree = new DependencyTree(['/path/to/my/dir']);
 const {
   missing, // a map from files in any of the given root directories to their (missing) dependencies
   resolved, // a map from files in any of the given root directories to their dependencies
@@ -26,13 +26,13 @@ const {
 
 // we can now get set of (transitive) references to a file
 const directOrTransitiveReferences = DependencyTree.getReferences(resolved, [
-  "/path/to/my/dir/file.ts",
+  '/path/to/my/dir/file.ts',
 ]);
 
 // or we can get the set of (transitive) dependencies of a file
 const directOrTransitiveDependencies = DependencyTree.getDependencies(
   resolved,
-  ["/path/to/my/dir/file.ts"]
+  ['/path/to/my/dir/file.ts'],
 );
 ```
 

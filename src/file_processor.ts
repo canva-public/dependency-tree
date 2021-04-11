@@ -1,7 +1,7 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
 // tslint:disable-next-line interface-name
-import { DependencyTree, FileToDeps, Path } from "./index";
+import { DependencyTree, FileToDeps, Path } from './index';
 
 export interface FileProcessor {
   /**
@@ -34,12 +34,12 @@ export interface FileProcessor {
     contents: string,
     missing: FileToDeps,
     files: ReadonlyArray<Path>,
-    dependencyTree: DependencyTree
+    dependencyTree: DependencyTree,
   ): Promise<Set<Path>>;
 }
 
-export { TypeScriptFileProcessor } from "./processors/typescript";
+export { TypeScriptFileProcessor } from './processors/typescript';
 export {
   FeatureFileProcessor,
   StorybookExtractorFn,
-} from "./processors/feature";
+} from './processors/feature';

@@ -1,16 +1,16 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
-import * as fs from "fs";
-import * as memoizeFs from "memoize-fs";
-import * as os from "os";
-import * as path from "path";
-import * as ts from "typescript";
-import { CompilerOptions } from "typescript";
-import { DependencyTree, FileToDeps, Path } from "../";
-import { FileProcessor } from "../file_processor";
-import { debug as logger } from "../logger";
-import memoize = require("lodash.memoize");
-import { name, version } from "../../package.json";
+import * as fs from 'fs';
+import * as memoizeFs from 'memoize-fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as ts from 'typescript';
+import { CompilerOptions } from 'typescript';
+import { DependencyTree, FileToDeps, Path } from '../';
+import { FileProcessor } from '../file_processor';
+import { debug as logger } from '../logger';
+import memoize = require('lodash.memoize');
+import { name, version } from '../../package.json';
 
 // this memoizes function invocations with a cache on disk so caching works across invocations of
 // the script, not just the function.
@@ -21,21 +21,21 @@ const memoizer = memoizeFs({
   cachePath: path.join(os.tmpdir(), name, version),
 });
 
-const tsLogger = logger.extend("ts");
-const debug = tsLogger.extend("debug");
-const info = tsLogger.extend("info");
-const error = tsLogger.extend("error");
+const tsLogger = logger.extend('ts');
+const debug = tsLogger.extend('debug');
+const info = tsLogger.extend('info');
+const error = tsLogger.extend('error');
 
 const reEntryPoint = /\.entry\.ts$/;
 
 type ResolveModuleNameFn = (
   moduleName: string,
   containingFile: string,
-  compilerOptions: ts.CompilerOptions
+  compilerOptions: ts.CompilerOptions,
 ) => Promise<ts.ResolvedModuleWithFailedLookupLocations>;
 
 export class TypeScriptFileProcessor implements FileProcessor {
-  private static memoizerCacheId = "resolveModuleName";
+  private static memoizerCacheId = 'resolveModuleName';
 
   protected readonly compilerOptions: ts.CompilerOptions;
   private reExt: RegExp;
@@ -45,10 +45,10 @@ export class TypeScriptFileProcessor implements FileProcessor {
   constructor(private readonly rootDir: string) {
     // We do pre-compilation of RegExp because it seems to be the fastest way to match file paths.
     this.reExt = new RegExp(
-      `\\.(${this.supportedFileTypes().join("|")})$`,
-      "i"
+      `\\.(${this.supportedFileTypes().join('|')})$`,
+      'i',
     );
-    this.reRootDir = new RegExp(`^${rootDir}`, "i");
+    this.reRootDir = new RegExp(`^${rootDir}`, 'i');
     this.compilerOptions = this.getTsCompilerOptions(rootDir);
     this.resolveModuleName = memoizer.fn(
       TypeScriptFileProcessor.resolveModuleName,
@@ -58,20 +58,20 @@ export class TypeScriptFileProcessor implements FileProcessor {
         // file. ("invalid" in this case is anything that cannot be parsed using `JSON.parse`).
         // Enabling this forces the memoized function to be re-run when the cache file is invalid.
         retryOnInvalidCache: true,
-      }
+      },
     );
   }
 
   private static resolveModuleName(
     moduleName: string,
     containingFile: string,
-    compilerOptions: ts.CompilerOptions
+    compilerOptions: ts.CompilerOptions,
   ) {
     return ts.resolveModuleName(
       moduleName,
       containingFile,
       compilerOptions,
-      ts.sys
+      ts.sys,
     );
   }
 
@@ -83,9 +83,9 @@ export class TypeScriptFileProcessor implements FileProcessor {
   // Creates an AST from the given file path
   static async createTSSourceFile(
     filePath: Path,
-    target: ts.ScriptTarget = ts.ScriptTarget.ES2015
+    target: ts.ScriptTarget = ts.ScriptTarget.ES2015,
   ): Promise<ts.SourceFile> {
-    const source = await fs.promises.readFile(filePath, "utf8");
+    const source = await fs.promises.readFile(filePath, 'utf8');
     return ts.createSourceFile(filePath, source, target);
   }
 
@@ -94,7 +94,7 @@ export class TypeScriptFileProcessor implements FileProcessor {
     contents: string,
     missing: FileToDeps,
     files: ReadonlyArray<Path>,
-    dependencyTree: DependencyTree
+    dependencyTree: DependencyTree,
   ): Promise<Set<Path>> {
     const importedFiles = new Set<Path>();
     const filesList = ts
@@ -108,11 +108,11 @@ export class TypeScriptFileProcessor implements FileProcessor {
       const referencedFile = dependencyTree.transformReference(fileName, file);
       if (Array.isArray(referencedFile)) {
         throw new Error(
-          `No support glob import in TS, file ${file}, import from ${fileName}`
+          `No support glob import in TS, file ${file}, import from ${fileName}`,
         );
       }
       // try to resolve via TS first
-      debug("trying to resolve %s against %s via TS", referencedFile, file);
+      debug('trying to resolve %s against %s via TS', referencedFile, file);
       const resolver = await this.resolveModuleName;
 
       const tsResolve:
@@ -120,11 +120,11 @@ export class TypeScriptFileProcessor implements FileProcessor {
         | undefined = await resolver(
         referencedFile,
         file,
-        this.compilerOptions
+        this.compilerOptions,
       );
       if (tsResolve == null) {
         throw new Error(
-          "nullish tsResolve value from memoized function. Expected result to always be non-nullish"
+          'nullish tsResolve value from memoized function. Expected result to always be non-nullish',
         );
       }
 
@@ -138,20 +138,20 @@ export class TypeScriptFileProcessor implements FileProcessor {
           file,
           referencedFile,
           importedFiles,
-          missing
+          missing,
         );
       }
     }
 
-    if (file.endsWith(".tests.ts") || file.endsWith(".tests.tsx")) {
-      debug("%s is a test, so we see if there is a snapshot file", file);
+    if (file.endsWith('.tests.ts') || file.endsWith('.tests.tsx')) {
+      debug('%s is a test, so we see if there is a snapshot file', file);
       const allegedTestFile = path.join(
         path.dirname(file),
-        "__snapshots__",
-        path.basename(file) + ".snap"
+        '__snapshots__',
+        path.basename(file) + '.snap',
       );
       if (fs.existsSync(allegedTestFile)) {
-        info("Marking %s as an import from %s", allegedTestFile, file);
+        info('Marking %s as an import from %s', allegedTestFile, file);
         importedFiles.add(allegedTestFile);
       }
     }
@@ -164,7 +164,7 @@ export class TypeScriptFileProcessor implements FileProcessor {
   }
 
   public supportedFileTypes(): string[] {
-    return ["ts", "tsx"];
+    return ['ts', 'tsx'];
   }
 
   /**
@@ -172,14 +172,14 @@ export class TypeScriptFileProcessor implements FileProcessor {
    */
   private getTsCompilerOptions: (rootDir: string) => CompilerOptions = memoize(
     (rootDir: string) => {
-      const tsConfigPath = path.join(rootDir, "tsconfig.json");
+      const tsConfigPath = path.join(rootDir, 'tsconfig.json');
       const tsOptionsJson = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
       return ts.parseJsonConfigFileContent(
         tsOptionsJson.config,
         ts.sys,
-        path.dirname(tsConfigPath)
+        path.dirname(tsConfigPath),
       ).options;
-    }
+    },
   );
 
   // Finds an implicit 'import' in the entry point object literal, like:
@@ -198,7 +198,7 @@ export class TypeScriptFileProcessor implements FileProcessor {
       return require(file).entryPoint.file;
     } catch (e) {
       error(
-        `Malformed entry point: '${file}'. Make sure that this entry point does follow the convention.`
+        `Malformed entry point: '${file}'. Make sure that this entry point does follow the convention.`,
       );
       throw e;
     }

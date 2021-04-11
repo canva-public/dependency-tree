@@ -1,10 +1,10 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
-import * as camelcase from "camelcase";
-import { escapeRegExp } from "lodash";
-import { OptionsV2, parseStringPromise as xml2js } from "xml2js";
-import { DependencyTree, FileToDeps, Path } from "../";
-import { FileProcessor } from "../file_processor";
+import * as camelcase from 'camelcase';
+import { escapeRegExp } from 'lodash';
+import { OptionsV2, parseStringPromise as xml2js } from 'xml2js';
+import { DependencyTree, FileToDeps, Path } from '../';
+import { FileProcessor } from '../file_processor';
 
 type Directive = {
   dependsOn?: string;
@@ -24,9 +24,9 @@ type Options = {
  * directives' parsing. For more info see: tools/dependency-tree/docs/directive.md.
  */
 abstract class DirectiveProcessor implements FileProcessor {
-  static readonly ELEMENT_NAME = "dependency-tree";
+  static readonly ELEMENT_NAME = 'dependency-tree';
 
-  private static readonly allowedAttributes = ["dependsOn"];
+  private static readonly allowedAttributes = ['dependsOn'];
   private readonly reMultilineDirectiveDelimiter: RegExp;
   private readonly reExt: RegExp;
   private readonly reNext: RegExp;
@@ -36,8 +36,8 @@ abstract class DirectiveProcessor implements FileProcessor {
     // We do pre-compilation of RegExp because it seems to be the fastest way to match a file
     // extension with some of supported extensions. See benchmarks: https://jsbench.me/hck9uhbt4z/1
     this.reExt = new RegExp(
-      `\\.(${this.supportedFileTypes().join("|")})$`,
-      "i"
+      `\\.(${this.supportedFileTypes().join('|')})$`,
+      'i',
     );
 
     /**
@@ -51,7 +51,7 @@ abstract class DirectiveProcessor implements FileProcessor {
     const reStrElementsBody = `(?:.*${
       this.options.reStart.source
     }\\s*(?<body><${escapeRegExp(
-      DirectiveProcessor.ELEMENT_NAME
+      DirectiveProcessor.ELEMENT_NAME,
     )}\\s[^>]*/>).*)`;
 
     /**
@@ -75,7 +75,7 @@ abstract class DirectiveProcessor implements FileProcessor {
      * elements or the end of the file.
      */
     this.reNext = new RegExp(
-      `^((?:${reStrElementsBody}|${reStrSyntaxError}|${reStrRest})(?:\\n+|$))`
+      `^((?:${reStrElementsBody}|${reStrSyntaxError}|${reStrRest})(?:\\n+|$))`,
     );
 
     /**
@@ -91,7 +91,7 @@ abstract class DirectiveProcessor implements FileProcessor {
      */
     this.reMultilineDirectiveDelimiter = new RegExp(
       `\\n\\s*(${this.options.reContinuation.source})`,
-      "g"
+      'g',
     );
 
     this.xmlParserOptions = {
@@ -99,7 +99,7 @@ abstract class DirectiveProcessor implements FileProcessor {
       attrNameProcessors: [camelcase],
       normalizeTags: true, // to lower case
       trim: true,
-      attrkey: "attributes",
+      attrkey: 'attributes',
       strict: true,
     };
   }
@@ -110,7 +110,7 @@ abstract class DirectiveProcessor implements FileProcessor {
    * @param obj - arbitrary payload
    */
   private static assertDirective(obj: unknown): Directive {
-    if (typeof obj !== "object" || obj === null) {
+    if (typeof obj !== 'object' || obj === null) {
       throw new TypeError(`Unexpected type: ${typeof obj}`);
     }
 
@@ -142,9 +142,9 @@ abstract class DirectiveProcessor implements FileProcessor {
    *                need to know.
    */
   private static getNextSymbolPosition = (
-    content: string
+    content: string,
   ): [number, number] => {
-    const m = content.split("\n");
+    const m = content.split('\n');
     return [m.length, (m.pop()?.length || 0) + 1];
   };
 
@@ -156,7 +156,7 @@ abstract class DirectiveProcessor implements FileProcessor {
     contents: string,
     missing: FileToDeps,
     files: ReadonlyArray<Path>,
-    dependencyTree: DependencyTree
+    dependencyTree: DependencyTree,
   ) {
     const importedFiles = new Set<Path>();
     const directives = await this.getDirectives(contents, file);
@@ -167,7 +167,7 @@ abstract class DirectiveProcessor implements FileProcessor {
           file,
           dependencyTree.transformReference(dependsOn, file),
           importedFiles,
-          missing
+          missing,
         );
     });
 
@@ -190,19 +190,19 @@ abstract class DirectiveProcessor implements FileProcessor {
    */
   private async getDirectives(
     content: string,
-    filePath: Path
+    filePath: Path,
   ): Promise<Directive[]> {
     const directives: Directive[] = [];
     let lastIndex = 0;
     const errorPayload = (
       fullMatch: string,
-      groupMatch: string
+      groupMatch: string,
     ): [string, string, number, number] => {
       const [line, column] = DirectiveProcessor.getNextSymbolPosition(
         content.slice(
           0,
-          lastIndex - fullMatch.length + fullMatch.indexOf(groupMatch)
-        )
+          lastIndex - fullMatch.length + fullMatch.indexOf(groupMatch),
+        ),
       );
       return [content, filePath, line, column];
     };
@@ -217,11 +217,11 @@ abstract class DirectiveProcessor implements FileProcessor {
         // Remove new lines with leftover comments's symbols and new lines.
         const singleLineBody = body.replace(
           this.reMultilineDirectiveDelimiter,
-          ""
+          '',
         );
         const parsed = await xml2js(
           singleLineBody,
-          this.xmlParserOptions
+          this.xmlParserOptions,
         ).catch((e) => {
           // We cut non-actual information about the syntax error location if any because
           // the xml2js library is always parses a single XML element passed from the RegExp
@@ -239,8 +239,8 @@ Do you have any questions? Reach out to #fe-infra on slack.`);
           }
           // Re-throw the cleaned up error with the full context.
           throw new DirectiveProcessorParseError(
-            e.message.replace(reXML2JSReport, ""),
-            ...errorPayload(match, body)
+            e.message.replace(reXML2JSReport, ''),
+            ...errorPayload(match, body),
           );
         });
         const {
@@ -252,15 +252,15 @@ Do you have any questions? Reach out to #fe-infra on slack.`);
           // Re-throw a validation error with full context of the error.
           throw new DirectiveProcessorValidationError(
             e.message,
-            ...errorPayload(match, body)
+            ...errorPayload(match, body),
           );
         }
       } else if (syntaxError) {
         // DirectiveProcessor.ELEMENT_NAME mention have found in the content but no match happened
         // so syntax seems to be invalid.
         throw new DirectiveProcessorSyntaxError(
-          "",
-          ...errorPayload(match, syntaxError)
+          '',
+          ...errorPayload(match, syntaxError),
         );
       }
     }
@@ -279,17 +279,17 @@ class DirectiveProcessorError extends Error {
     content: string,
     readonly fileName: Path,
     readonly lineNumber: number,
-    readonly columnNumber: number
+    readonly columnNumber: number,
   ) {
     super(`${message}
 
 ${lineNumber}\t${content.split(/\n/g)[lineNumber - 1]}
-\t${" ".repeat(columnNumber - 1)}^
-\t${" ".repeat(columnNumber - 1)}└── definition starts at ${[
+\t${' '.repeat(columnNumber - 1)}^
+\t${' '.repeat(columnNumber - 1)}└── definition starts at ${[
       fileName,
       lineNumber,
       columnNumber,
-    ].join(":")}
+    ].join(':')}
 
 Please make sure you have followed the guidelines of how to define the dependency-tree directive.
 See the online documentation at dependency-tree/docs/directive.md.
@@ -315,7 +315,7 @@ export class TSDirectiveProcessor extends DirectiveProcessor {
     super({
       reStart: /\/\/\//,
       reContinuation: /\/\/\/?/,
-      fileTypes: ["ts", "tsx"],
+      fileTypes: ['ts', 'tsx'],
     });
   }
 }
