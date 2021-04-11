@@ -1,10 +1,20 @@
 {
   "name": "@canva/dependency-tree",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "Calculates a dependency tree for set of files",
   "main": "dist/index.js",
   "author": "Canva Pty Ltd",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Canva/depdendency-tree-public.git"
+  },
+  "keywords": [
+    "dependency",
+    "deps",
+    "tree",
+    "graph"
+  ],
   "scripts": {
     "prettier": "prettier --write .",
     "prepare": "rimraf dist/ && tsc",
@@ -54,7 +64,6 @@
   },
   "typings": "dist/index.d.ts",
   "engines": {
-    "node": ">=12.13.1 < 13",
-    "yarn": ">=1.13.0"
+    "node": "12.x || 14.x"
   }
 }
