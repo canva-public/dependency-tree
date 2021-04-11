@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "declaration": true,
+    "lib": ["es2019"],
+    "module": "commonjs",
+    "target": "es2019",
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "outDir": "dist",
+    "strictNullChecks": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}

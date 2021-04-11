@@ -1,0 +1,8 @@
+/* Copyright 2021 Canva Inc. All Rights Reserved. */
+
+@import "./c.css";
+@value x from './b.css';
+
+.x {
+  background: url("./a.png");
+}
