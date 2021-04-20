@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/Canva/depdendency-tree-public.git"
+    "url": "git+ssh://git@github.com/canva-public/depdendency-tree.git"
   },
   "keywords": [
     "dependency",
