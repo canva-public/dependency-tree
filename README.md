@@ -1,6 +1,6 @@
 # dependency-tree
 
-![build](https://github.com/Canva/dependency-tree-public/actions/workflows/node.js.yml/badge.svg)
+![build](https://github.com/canva-public/dependency-tree/actions/workflows/node.js.yml/badge.svg)
 
 This package can create a dependency tree from a given set of files/folders.
 The nodes of the tree are files and the edges are file -> file dependencies.
