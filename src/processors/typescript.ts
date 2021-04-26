@@ -10,7 +10,14 @@ import { DependencyTree, FileToDeps, Path } from '../';
 import { FileProcessor } from '../file_processor';
 import { debug as logger } from '../logger';
 import memoize = require('lodash.memoize');
-import { name, version } from '../../package.json';
+
+// we can't use the simple
+// import { name, version } from '../../package.json';
+// here as during the build phase TS then nests outputs in the dist dir
+// in order to include the package.json as a parent
+// @ts-expect-error pkinfo does not come with type defs and output is variable
+import * as pkginfo from 'pkginfo';
+const { name, version } = pkginfo.read(module).package;
 
 // this memoizes function invocations with a cache on disk so caching works across invocations of
 // the script, not just the function.

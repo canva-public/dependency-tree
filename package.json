@@ -1,10 +1,13 @@
 {
-  "name": "@canva/dependency-tree",
-  "version": "2.4.3",
+  "name": "@canva-public/dependency-tree",
+  "version": "2.4.4",
   "description": "Calculates a dependency tree for set of files",
   "main": "dist/index.js",
   "author": "Canva Pty Ltd",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/canva-public/depdendency-tree.git"
@@ -17,13 +20,13 @@
   ],
   "scripts": {
     "prettier": "prettier --write .",
-    "prepare": "rimraf dist/ && tsc",
+    "prepack": "tsc --declarationDir dist --declaration",
+    "prepare": "rm -rf ./dist",
     "eslint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "pretest": "prettier --check . && yarn eslint",
     "test": "jest --ci --coverage",
     "test:watch": "jest --watch --notify"
   },
-  "private": true,
   "dependencies": {
     "acorn": "^8.0.4",
     "builtin-modules": "^3.2.0",
@@ -38,6 +41,7 @@
     "lodash.escaperegexp": "^4.1.2",
     "lodash.memoize": "^4.1.2",
     "memoize-fs": "^2.2.0",
+    "pkginfo": "^0.4.1",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
