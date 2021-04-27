@@ -1,5 +1,5 @@
 {
-  "name": "@canva-public/dependency-tree",
+  "name": "@canva/dependency-tree",
   "version": "2.4.4",
   "description": "Calculates a dependency tree for set of files",
   "main": "dist/index.js",

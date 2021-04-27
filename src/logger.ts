@@ -2,4 +2,4 @@
 
 import * as createDebug from 'debug';
 
-export const debug = createDebug('@canva-public/dependency-tree');
+export const debug = createDebug('@canva/dependency-tree');
