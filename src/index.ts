@@ -155,7 +155,7 @@ export class DependencyTree {
    *
    * Built-in (Node) and package dependencies are ignored.
    */
-  public async gather(): Promise<{
+  public async gather({ batchSize }: { batchSize?: number } = {}): Promise<{
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
@@ -164,10 +164,18 @@ export class DependencyTree {
     const files = this.getFiles();
     info(`Found a total of ${files.length} source files`);
 
-    for (const file of files) {
+    const getDepsForFilesTasks = files.map((file: string) => async () => {
       info('Scanning %s', file);
       const importedFiles = await this.getImportedFiles(file, missing, files);
       fileToDeps.set(file, importedFiles);
+    });
+
+    if (batchSize != null) {
+      await runInBatches(getDepsForFilesTasks, batchSize);
+    } else {
+      for (const task of getDepsForFilesTasks) {
+        await task();
+      }
     }
 
     return {
@@ -291,6 +299,16 @@ export class DependencyTree {
         }),
       );
     }, []);
+  }
+}
+
+async function runInBatches(
+  tasks: (() => Promise<void>)[],
+  batchSize: number,
+): Promise<void> {
+  for (let i = 0; i < tasks.length; i += batchSize) {
+    const batch = tasks.slice(i, i + batchSize);
+    await Promise.all(batch.map((task) => task()));
   }
 }
 
