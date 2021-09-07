@@ -155,7 +155,9 @@ export class DependencyTree {
    *
    * Built-in (Node) and package dependencies are ignored.
    */
-  public async gather({ batchSize }: { batchSize?: number } = {}): Promise<{
+  public async gather({
+    batchSize = 10,
+  }: { batchSize?: number } = {}): Promise<{
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
@@ -170,9 +172,10 @@ export class DependencyTree {
       fileToDeps.set(file, importedFiles);
     });
 
-    if (batchSize != null) {
+    if (batchSize > 1) {
       await runInBatches(getDepsForFilesTasks, batchSize);
     } else {
+      // if batchSize <= 1, just run the tasks serially
       for (const task of getDepsForFilesTasks) {
         await task();
       }
