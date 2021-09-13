@@ -155,20 +155,30 @@ export class DependencyTree {
    *
    * Built-in (Node) and package dependencies are ignored.
    */
-  public async gather(): Promise<{
+  public async gather({
+    batchSize = 10,
+  }: { batchSize?: number } = {}): Promise<{
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
+    if (batchSize < 1) {
+      throw new Error(
+        `expected a batch size greater than 0, got '${batchSize}'`,
+      );
+    }
+
     const fileToDeps: FileToDeps = new Map();
     const missing: FileToDeps = new Map();
     const files = this.getFiles();
     info(`Found a total of ${files.length} source files`);
 
-    for (const file of files) {
+    const getDepsForFilesTasks = files.map((file: string) => async () => {
       info('Scanning %s', file);
       const importedFiles = await this.getImportedFiles(file, missing, files);
       fileToDeps.set(file, importedFiles);
-    }
+    });
+
+    await runInBatches(getDepsForFilesTasks, batchSize);
 
     return {
       missing,
@@ -291,6 +301,16 @@ export class DependencyTree {
         }),
       );
     }, []);
+  }
+}
+
+async function runInBatches(
+  tasks: (() => Promise<void>)[],
+  batchSize: number,
+): Promise<void> {
+  for (let i = 0; i < tasks.length; i += batchSize) {
+    const batch = tasks.slice(i, i + batchSize);
+    await Promise.all(batch.map((task) => task()));
   }
 }
 

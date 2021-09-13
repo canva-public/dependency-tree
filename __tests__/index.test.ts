@@ -473,4 +473,30 @@ describe('dependencyTree', () => {
       });
     });
   });
+
+  describe('batch size', () => {
+    const dir = 'directive';
+    beforeEach(() => {
+      dependencyTree = new DependencyTree([fixture(dir)]);
+    });
+
+    it('works with a batch size of 1', async () => {
+      expect.hasAssertions();
+      const result = await dependencyTree.gather({ batchSize: 1 });
+      expect(result).toBeTruthy();
+    });
+
+    it('works with a batch size of 100', async () => {
+      expect.hasAssertions();
+      const result = await dependencyTree.gather({ batchSize: 100 });
+      expect(result).toBeTruthy();
+    });
+
+    it('rejects a batch size less than 1', async () => {
+      expect.hasAssertions();
+      await expect(() =>
+        dependencyTree.gather({ batchSize: -1 }),
+      ).rejects.toThrowErrorMatchingSnapshot();
+    });
+  });
 });
