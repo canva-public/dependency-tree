@@ -3,3 +3,4 @@
 /dist
 yarn-error.log
 /canva-public-dependency-tree-*.tgz
+.DS_Store
