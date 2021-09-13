@@ -161,6 +161,10 @@ export class DependencyTree {
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
+    if (batchSize < 1) {
+      throw new Error(`expected a batch size greater than 0, got '${batchSize}'`);
+    }
+
     const fileToDeps: FileToDeps = new Map();
     const missing: FileToDeps = new Map();
     const files = this.getFiles();

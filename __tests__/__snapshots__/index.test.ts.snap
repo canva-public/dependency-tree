@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dependencyTree batch size rejects a batch size less than 1 1`] = `"expected a batch size greater than 0, got '-1'"`;
