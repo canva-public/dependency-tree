@@ -172,14 +172,7 @@ export class DependencyTree {
       fileToDeps.set(file, importedFiles);
     });
 
-    if (batchSize > 1) {
-      await runInBatches(getDepsForFilesTasks, batchSize);
-    } else {
-      // if batchSize <= 1, just run the tasks serially
-      for (const task of getDepsForFilesTasks) {
-        await task();
-      }
-    }
+    await runInBatches(getDepsForFilesTasks, batchSize);
 
     return {
       missing,
