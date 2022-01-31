@@ -2,7 +2,7 @@
 
 import { messages } from 'cucumber-messages';
 import * as gherkin from 'gherkin';
-import { escapeRegExp } from 'lodash';
+import escapeRegExp = require('lodash.escaperegexp');
 import * as path from 'path';
 import * as ts from 'typescript';
 import { FileToDeps, Path } from '../';
