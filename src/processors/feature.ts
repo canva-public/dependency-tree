@@ -2,6 +2,7 @@
 
 import { messages } from 'cucumber-messages';
 import * as gherkin from 'gherkin';
+import { escapeRegExp } from 'lodash';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { FileToDeps, Path } from '../';
@@ -14,11 +15,14 @@ const logger = debug.extend('feature');
 const info = logger.extend('info');
 const warn = logger.extend('warn');
 
-const SEPARATOR = path.sep === '\\' ? '\\\\' : path.sep;
 const STORIES_IMPORT = 'storiesOf';
 const STORIES_PACKAGE = '@storybook/react';
-const STORIES_FILE_RE = new RegExp(`([^${SEPARATOR}]+)\\.stories\\.tsx?$`);
-const STEPS_FILE_RE = new RegExp(`([^${SEPARATOR}]+)\\.steps\\.ts$`);
+const STORIES_FILE_RE = new RegExp(
+  `([^${escapeRegExp(path.sep)}]+)\\.stories\\.tsx?$`,
+);
+const STEPS_FILE_RE = new RegExp(
+  `([^${escapeRegExp(path.sep)}]+)\\.steps\\.ts$`,
+);
 const RE_LITERAL_RE = /^\/(.+)\/([gimsuy]*)$/;
 const STEP_DEFININITION_FN_NAMES = ['When', 'Then', 'Given'];
 
