@@ -1,7 +1,7 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
 import * as camelcase from 'camelcase';
-import { escapeRegExp } from 'lodash';
+import escapeRegExp = require('lodash.escaperegexp');
 import { OptionsV2, parseStringPromise as xml2js } from 'xml2js';
 import { DependencyTree, FileToDeps, Path } from '../';
 import { FileProcessor } from '../file_processor';
