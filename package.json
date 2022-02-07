@@ -1,6 +1,6 @@
 {
   "name": "@canva/dependency-tree",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Calculates a dependency tree for set of files",
   "main": "dist/index.js",
   "author": "Canva Pty Ltd",
