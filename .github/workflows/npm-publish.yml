@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-node@v2
       # We're using npm to publish due to: https://github.com/yarnpkg/yarn/issues/5779
       - run: npm install
+      - run: npm prepack
       - id: publish
         uses: JS-DevTools/npm-publish@v1.4.3
         with:

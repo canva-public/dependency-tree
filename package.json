@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/canva-public/depdendency-tree.git"
+    "url": "git+ssh://git@github.com/canva-public/dependency-tree.git"
   },
   "keywords": [
     "dependency",
