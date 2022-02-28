@@ -68,6 +68,6 @@
   },
   "typings": "dist/index.d.ts",
   "engines": {
-    "node": "12.x || 14.x"
+    "node": "12.x || 14.x || 16.x"
   }
 }
