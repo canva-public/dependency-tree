@@ -199,7 +199,20 @@ export class TypeScriptFileProcessor implements FileProcessor {
       path.dirname(file),
       ts.sys.fileExists,
     );
-    if (!tsconfigPath || !tsconfigPath.startsWith(this.rootDir)) {
+    if (!tsconfigPath) {
+      debug(
+        `could not find a tsconfig file for '%s'`,
+        path.relative(this.rootDir, file),
+      );
+      return [];
+    }
+    if (!tsconfigPath.startsWith(this.rootDir)) {
+      debug(
+        `invalid tsconfig file '%s' found for '%s'. expected a tsconfig file inside the project root '%s'`,
+        path.relative(this.rootDir, tsconfigPath),
+        path.relative(this.rootDir, file),
+        this.rootDir,
+      );
       return [];
     }
 
