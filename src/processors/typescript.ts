@@ -104,6 +104,16 @@ export class TypeScriptFileProcessor implements FileProcessor {
     dependencyTree: DependencyTree,
   ): Promise<Set<Path>> {
     const importedFiles = new Set<Path>();
+
+    // TypeScript files can *implicitly* depend on .d.ts files. We discover
+    // these files by extracting them from the nearest tsconfig.json file.
+    // These do not need to be processed further since they have already been fully
+    // resolved by the typescript compiler.
+    const includes = await this.includesFromNearestTsconfigFile(file);
+    for (const include of includes) {
+      importedFiles.add(include);
+    }
+
     const filesList = ts
       .preProcessFile(contents, true, true)
       .importedFiles.map(({ fileName }) => fileName);
@@ -161,11 +171,6 @@ export class TypeScriptFileProcessor implements FileProcessor {
         info('Marking %s as an import from %s', allegedTestFile, file);
         importedFiles.add(allegedTestFile);
       }
-    }
-
-    const includes = await this.includesFromNearestTsconfigFile(file);
-    for (const include of includes) {
-      importedFiles.add(include);
     }
 
     return Promise.resolve(importedFiles);
