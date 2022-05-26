@@ -163,6 +163,11 @@ export class TypeScriptFileProcessor implements FileProcessor {
       }
     }
 
+    const includes = await this.includesFromNearestTsconfigFile(file);
+    for (const include of includes) {
+      importedFiles.add(include);
+    }
+
     return Promise.resolve(importedFiles);
   }
 
@@ -188,6 +193,33 @@ export class TypeScriptFileProcessor implements FileProcessor {
       ).options;
     },
   );
+
+  private async includesFromNearestTsconfigFile(file: Path): Promise<string[]> {
+    const tsconfigPath = ts.findConfigFile(
+      path.dirname(file),
+      ts.sys.fileExists,
+    );
+    if (!tsconfigPath || !tsconfigPath.startsWith(this.rootDir)) {
+      return [];
+    }
+
+    const json = ts.parseJsonText(
+      tsconfigPath,
+      await fs.promises.readFile(tsconfigPath, 'utf-8'),
+    );
+    const parsed = ts.parseJsonSourceFileConfigFileContent(
+      json,
+      ts.sys,
+      path.dirname(tsconfigPath),
+    );
+    return parsed.fileNames.filter(
+      (fileName) =>
+        // only include .d.ts files. all other references should be made using `import` or `require`.
+        fileName.endsWith('.d.ts') &&
+        // files do not depend on themselves
+        fileName !== file,
+    );
+  }
 
   // Finds an implicit 'import' in the entry point object literal, like:
   //
