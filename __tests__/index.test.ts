@@ -499,4 +499,33 @@ describe('dependencyTree', () => {
       ).rejects.toThrowErrorMatchingSnapshot();
     });
   });
+
+  describe('tsconfig', () => {
+    beforeEach(() => {
+      dependencyTree = new DependencyTree([fixture('tsconfigs')]);
+    });
+
+    it('adds files in `include` from nearest tsconfig.json', async () => {
+      expect.hasAssertions();
+      const result = await dependencyTree.gather();
+      const decl1 = fixture('tsconfigs', 'decls', 'one.d.ts');
+      const decl2 = fixture('tsconfigs', 'decls', 'two.d.ts');
+      expect(result).toStrictEqual({
+        missing: new Map(),
+        resolved: new Map([
+          [fixture('tsconfigs', 'project', 'project.ts'), new Set([decl1])],
+          [
+            fixture('tsconfigs', 'project', 'nested', 'nested.ts'),
+            new Set([decl1]),
+          ],
+          [fixture('tsconfigs', 'glob', 'glob.ts'), new Set([decl1, decl2])],
+          // "includes" is overwritten in the child config
+          [fixture('tsconfigs', 'extends', 'extends.ts'), new Set([])],
+          // decls in the same dir that includes './**.*.*' depend on one another
+          [fixture('tsconfigs', 'decls', 'one.d.ts'), new Set([decl2])],
+          [fixture('tsconfigs', 'decls', 'two.d.ts'), new Set([decl1])],
+        ]),
+      });
+    });
+  });
 });
