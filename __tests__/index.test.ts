@@ -524,6 +524,12 @@ describe('dependencyTree', () => {
           // decls in the same dir that includes './**.*.*' depend on one another
           [fixture('tsconfigs', 'decls', 'one.d.ts'), new Set([decl2])],
           [fixture('tsconfigs', 'decls', 'two.d.ts'), new Set([decl1])],
+          // files can depend on decls in the same dir
+          [
+            fixture('tsconfigs', 'mixed', 'source.ts'),
+            new Set([fixture('tsconfigs', 'mixed', 'decl.d.ts')]),
+          ],
+          [fixture('tsconfigs', 'mixed', 'decl.d.ts'), new Set([])],
         ]),
       });
     });
