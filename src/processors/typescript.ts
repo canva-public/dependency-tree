@@ -205,20 +205,25 @@ export class TypeScriptFileProcessor implements FileProcessor {
       ts.sys.fileExists,
     );
     if (!tsconfigPath) {
-      debug(
-        `could not find a tsconfig file for '%s'`,
-        path.relative(this.rootDir, file),
+      throw new Error(
+        `could not find a tsconfig file for '${path.relative(
+          this.rootDir,
+          file,
+        )}'`,
       );
-      return [];
     }
     if (!tsconfigPath.startsWith(this.rootDir)) {
-      debug(
-        `invalid tsconfig file '%s' found for '%s'. expected a tsconfig file inside the project root '%s'`,
-        path.relative(this.rootDir, tsconfigPath),
-        path.relative(this.rootDir, file),
-        this.rootDir,
+      throw new Error(
+        `invalid tsconfig file '${path.relative(
+          this.rootDir,
+          tsconfigPath,
+        )}' found for '${path.relative(
+          this.rootDir,
+          file,
+        )}'. expected a tsconfig file inside the project root '${
+          this.rootDir
+        }'`,
       );
-      return [];
     }
 
     const json = ts.parseJsonText(
