@@ -104,6 +104,16 @@ export class TypeScriptFileProcessor implements FileProcessor {
     dependencyTree: DependencyTree,
   ): Promise<Set<Path>> {
     const importedFiles = new Set<Path>();
+
+    // TypeScript files can *implicitly* depend on .d.ts files. We discover
+    // these files by extracting them from the nearest tsconfig.json file.
+    // These do not need to be processed further since they have already been fully
+    // resolved by the typescript compiler.
+    const includes = await this.includesFromNearestTsconfigFile(file);
+    for (const include of includes) {
+      importedFiles.add(include);
+    }
+
     const filesList = ts
       .preProcessFile(contents, true, true)
       .importedFiles.map(({ fileName }) => fileName);
@@ -188,6 +198,51 @@ export class TypeScriptFileProcessor implements FileProcessor {
       ).options;
     },
   );
+
+  private async includesFromNearestTsconfigFile(file: Path): Promise<string[]> {
+    const tsconfigPath = ts.findConfigFile(
+      path.dirname(file),
+      ts.sys.fileExists,
+    );
+    if (!tsconfigPath) {
+      throw new Error(
+        `could not find a tsconfig file for '${path.relative(
+          this.rootDir,
+          file,
+        )}'`,
+      );
+    }
+    if (!tsconfigPath.startsWith(this.rootDir)) {
+      throw new Error(
+        `invalid tsconfig file '${path.relative(
+          this.rootDir,
+          tsconfigPath,
+        )}' found for '${path.relative(
+          this.rootDir,
+          file,
+        )}'. expected a tsconfig file inside the project root '${
+          this.rootDir
+        }'`,
+      );
+    }
+
+    const json = ts.parseJsonText(
+      tsconfigPath,
+      await fs.promises.readFile(tsconfigPath, 'utf-8'),
+    );
+    const parsed = ts.parseJsonSourceFileConfigFileContent(
+      json,
+      ts.sys,
+      path.dirname(tsconfigPath),
+    );
+    return parsed.fileNames.filter(
+      (fileName) =>
+        // only include .d.ts files. all other references should be made using `import` or `require`.
+        fileName.endsWith('.d.ts') &&
+        // files do not depend on themselves
+        fileName !== file,
+    );
+  }
 
   // Finds an implicit 'import' in the entry point object literal, like:
   //
