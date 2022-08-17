@@ -17,6 +17,7 @@ import { TypeScriptFileProcessor } from './processors/typescript';
 import Resolver = require('enhanced-resolve/lib/Resolver');
 import SyncAsyncFileSystemDecorator = require('enhanced-resolve/lib/SyncAsyncFileSystemDecorator');
 import { AbstractInputFileSystem } from 'enhanced-resolve/lib/common-types';
+import { PromisePool } from '@supercharge/promise-pool';
 
 // This is a set of built-in modules, e.g. `path`, `fs`, etc.
 const builtinModules = new Set(bim);
@@ -308,10 +309,9 @@ async function runInBatches(
   tasks: (() => Promise<void>)[],
   batchSize: number,
 ): Promise<void> {
-  for (let i = 0; i < tasks.length; i += batchSize) {
-    const batch = tasks.slice(i, i + batchSize);
-    await Promise.all(batch.map((task) => task()));
-  }
+  await PromisePool.withConcurrency(batchSize)
+    .for(tasks)
+    .process((task) => task());
 }
 
 /**
