@@ -1,6 +1,6 @@
 {
   "name": "@canva/dependency-tree",
-  "version": "3.1.5",
+  "version": "3.1.6",
   "description": "Calculates a dependency tree for set of files",
   "main": "dist/index.js",
   "author": "Canva Pty Ltd",
@@ -27,6 +27,7 @@
     "test:watch": "jest --watch --notify"
   },
   "dependencies": {
+    "@supercharge/promise-pool": "^2.3.2",
     "acorn": "^8.0.4",
     "builtin-modules": "^3.2.0",
     "cucumber-messages": "3.x",
