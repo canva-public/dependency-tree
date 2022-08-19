@@ -157,8 +157,11 @@ export class DependencyTree {
    * Built-in (Node) and package dependencies are ignored.
    */
   public async gather({
+    // The files to gather dependencies for
+    // by default globbing is used to find files from rootDirs
+    filesToProcess,
     batchSize = 10,
-  }: { batchSize?: number } = {}): Promise<{
+  }: { batchSize?: number; filesToProcess?: readonly string[] } = {}): Promise<{
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
@@ -170,7 +173,7 @@ export class DependencyTree {
 
     const fileToDeps: FileToDeps = new Map();
     const missing: FileToDeps = new Map();
-    const files = this.getFiles();
+    const files = filesToProcess ?? this.getFiles();
     info(`Found a total of ${files.length} source files`);
 
     const getDepsForFilesTasks = files.map((file: string) => async () => {
