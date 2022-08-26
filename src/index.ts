@@ -160,8 +160,15 @@ export class DependencyTree {
     // The files to gather dependencies for
     // by default globbing is used to find files from rootDirs
     filesToProcess,
+    // All files collected
+    // by default globbing is used to find files from rootDirs
+    allFilesToProcess,
     batchSize = 10,
-  }: { batchSize?: number; filesToProcess?: readonly string[] } = {}): Promise<{
+  }: {
+    batchSize?: number;
+    filesToProcess?: readonly string[];
+    allFilesToProcess?: readonly string[];
+  } = {}): Promise<{
     missing: FileToDeps;
     resolved: FileToDeps;
   }> {
@@ -173,12 +180,17 @@ export class DependencyTree {
 
     const fileToDeps: FileToDeps = new Map();
     const missing: FileToDeps = new Map();
-    const files = filesToProcess ?? this.getFiles();
+    const allFiles = allFilesToProcess ?? this.getFiles();
+    const files = filesToProcess ?? allFiles;
     info(`Found a total of ${files.length} source files`);
 
     const getDepsForFilesTasks = files.map((file: string) => async () => {
       info('Scanning %s', file);
-      const importedFiles = await this.getImportedFiles(file, missing, files);
+      const importedFiles = await this.getImportedFiles(
+        file,
+        missing,
+        allFiles,
+      );
       fileToDeps.set(file, importedFiles);
     });
 
@@ -289,7 +301,7 @@ export class DependencyTree {
    *
    * @returns {string[]} An array of found files (absolute paths)
    */
-  private getFiles(): readonly Path[] {
+  getFiles(): readonly Path[] {
     const supportedFileTypes = new Set(
       this.fileProcessors.reduce(
         (acc, processor) => [...acc, ...processor.supportedFileTypes()],
