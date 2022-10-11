@@ -297,20 +297,28 @@ export class DependencyTree {
   }
 
   /**
-   * Globs all supported files from the {rootDirs}
-   *
-   * @returns {string[]} An array of found files (absolute paths)
+   * @returns {string[]} An array of supported file extensions
    */
-  getFiles(): readonly Path[] {
+  getSupportedFileTypes(): string[] {
     const supportedFileTypes = new Set(
       this.fileProcessors.reduce(
         (acc, processor) => [...acc, ...processor.supportedFileTypes()],
         [],
       ),
     );
+    return Array.from(supportedFileTypes);
+  }
+
+  /**
+   * Globs all supported files from the {rootDirs}
+   *
+   * @returns {string[]} An array of found files (absolute paths)
+   */
+  getFiles(): readonly Path[] {
+    const supportedFileTypes = this.getSupportedFileTypes();
     return this.rootDirs.reduce<Path[]>((acc: string[], rootDir) => {
       return acc.concat(
-        fg.sync(`**/*.{${Array.from(supportedFileTypes).join(',')}}`, {
+        fg.sync(`**/*.{${supportedFileTypes.join(',')}}`, {
           cwd: rootDir,
           ignore: this.ignoreGlobs,
           absolute: true,
