@@ -44,8 +44,8 @@ The element can be closed at a new line:
 Available attributes:
 
 - **`depends-on="..."`**
-    - contains a relative path to a dependency file.
-    - or a relative path with glob pattern.
+  - contains a relative path to a dependency file.
+  - or a relative path with glob pattern.
 
 Note that unavailable attributes will cause a validation error.
 

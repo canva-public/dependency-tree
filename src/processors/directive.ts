@@ -22,8 +22,7 @@ type Options = {
 };
 
 /**
- * If reference is a glob pattern (for example `./foo/*.ts`), this function should transform to
- * the list of files, such as `['./foo/bar.ts', './foo/baz.ts']`.
+ * Gets a list of files if the reference is a glob pattern. Otherwise, returns the original reference.
  */
 export const transformReference: ReferenceTransformFn = (
   ref: string,
@@ -31,9 +30,7 @@ export const transformReference: ReferenceTransformFn = (
 ) => {
   if (fg.isDynamicPattern(ref)) {
     // Glob pattern
-    return fg
-      .sync(ref, { cwd: path.dirname(source), absolute: true })
-      .map((r) => r);
+    return fg.sync(ref, { cwd: path.dirname(source), absolute: true });
   }
   return ref;
 };
@@ -179,7 +176,6 @@ abstract class DirectiveProcessor implements FileProcessor {
   ) {
     const importedFiles = new Set<Path>();
     const directives = await this.getDirectives(contents, file);
-
     // Handle directives with 'depends-on' attribute defined
     directives.forEach(({ dependsOn }) => {
       dependsOn &&
