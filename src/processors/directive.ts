@@ -3,8 +3,10 @@
 import * as camelcase from 'camelcase';
 import escapeRegExp = require('lodash.escaperegexp');
 import { OptionsV2, parseStringPromise as xml2js } from 'xml2js';
-import { DependencyTree, FileToDeps, Path } from '../';
+import { DependencyTree, FileToDeps, Path, ReferenceTransformFn } from '../';
 import { FileProcessor } from '../file_processor';
+import * as path from 'path';
+import * as fg from 'fast-glob';
 
 type Directive = {
   dependsOn?: string;
@@ -17,6 +19,23 @@ type Options = {
   reContinuation: RegExp;
   // File type that need to be inspected by an instance of the processor.
   fileTypes: string[];
+};
+
+/**
+ * If reference is a glob pattern (for example `./foo/*.ts`), this function should transform to
+ * the list of files, such as `['./foo/bar.ts', './foo/baz.ts']`.
+ */
+export const transformReference: ReferenceTransformFn = (
+  ref: string,
+  source: string,
+) => {
+  if (fg.isDynamicPattern(ref)) {
+    // Glob pattern
+    return fg
+      .sync(ref, { cwd: path.dirname(source), absolute: true })
+      .map((r) => r);
+  }
+  return ref;
 };
 
 /**
@@ -160,12 +179,13 @@ abstract class DirectiveProcessor implements FileProcessor {
   ) {
     const importedFiles = new Set<Path>();
     const directives = await this.getDirectives(contents, file);
+
     // Handle directives with 'depends-on' attribute defined
     directives.forEach(({ dependsOn }) => {
       dependsOn &&
         dependencyTree.resolveAndCollect(
           file,
-          dependencyTree.transformReference(dependsOn, file),
+          transformReference(dependsOn, file),
           importedFiles,
           missing,
         );

@@ -460,6 +460,7 @@ describe('dependencyTree', () => {
         ]),
         resolved: new Map([
           [fixture(dir, 'dep1.ts'), new Set()],
+          [fixture(dir, 'dep7.ts'), new Set([fixture(dir, 'dep3.sh')])],
           [
             fixture(dir, 'index.ts'),
             new Set([
@@ -468,7 +469,14 @@ describe('dependencyTree', () => {
               fixture(dir, 'dep3.sh'),
             ]),
           ],
-          [fixture(dir, 'util.ts'), new Set([fixture(dir, 'dep4.ejs')])],
+          [
+            fixture(dir, 'util.ts'),
+            new Set([
+              fixture(dir, 'dep4.ejs'),
+              fixture(dir, 'dir1/dep5.py'),
+              fixture(dir, 'dir1/dir2/dep6.md'),
+            ]),
+          ],
         ]),
       });
     });

@@ -56,6 +56,7 @@ export class JavascriptFileProcessor implements FileProcessor {
     files: ReadonlyArray<Path>,
     dependencyTree: DependencyTree,
   ): Promise<Set<Path>> {
+    // TODO: change
     const importedFiles = new Set<Path>();
     const referencedFiles = new Set<Path>(extractJsImports(contents));
     referencedFiles.forEach((referencedFile) => {
