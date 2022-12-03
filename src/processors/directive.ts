@@ -29,7 +29,6 @@ export const transformReference: ReferenceTransformFn = (
   source: string,
 ) => {
   if (fg.isDynamicPattern(ref)) {
-    // Glob pattern
     return fg.sync(ref, { cwd: path.dirname(source), absolute: true });
   }
   return ref;
