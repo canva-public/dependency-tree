@@ -41,7 +41,7 @@
     "lodash.memoize": "^4.1.2",
     "memoize-fs": "^2.2.0",
     "pkginfo": "^0.4.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.5.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
