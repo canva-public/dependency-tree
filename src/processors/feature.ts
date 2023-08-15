@@ -154,7 +154,10 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
       if (FeatureFileProcessor.isExportAssignment(node)) {
         const { expression } = node;
-        if (FeatureFileProcessor.isObjectLiteralExpression(expression)) {
+        if (
+          FeatureFileProcessor.isObjectLiteralExpression(expression) &&
+          expression.properties.length > 0
+        ) {
           const property = expression.properties[0];
           if (FeatureFileProcessor.isPropertyAssignment(property)) {
             const { name, initializer } = property;
@@ -164,6 +167,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
               name.escapedText === CSF3_EXPORT_TITLE_FIELD
             ) {
               callback(initializer.text);
+              return;
             }
           }
         }
