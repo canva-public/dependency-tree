@@ -126,6 +126,10 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     return node.kind === ts.SyntaxKind.PropertyAssignment;
   }
 
+  private static isAsExpression(node: ts.Node): node is ts.AsExpression {
+    return node.kind === ts.SyntaxKind.AsExpression;
+  }
+
   private static isIdentifier(node: ts.Node): node is ts.Identifier {
     return node.kind === ts.SyntaxKind.Identifier;
   }
@@ -153,7 +157,10 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
       }
 
       if (FeatureFileProcessor.isExportAssignment(node)) {
-        const { expression } = node;
+        let { expression } = node;
+        if (FeatureFileProcessor.isAsExpression(expression)) {
+          expression = expression.expression;
+        }
         if (
           FeatureFileProcessor.isObjectLiteralExpression(expression) &&
           expression.properties.length > 0
