@@ -3,4 +3,11 @@
 import { storiesOf } from "@storybook/react";
 import * as React from "react";
 
-storiesOf("b", module).add("Foo", () => null);
+export default {
+  title: 'b',
+  component: null,
+};
+
+export const Foo = {
+  render: () => null,
+}
