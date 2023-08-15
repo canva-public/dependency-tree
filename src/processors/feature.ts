@@ -16,6 +16,7 @@ const info = logger.extend('info');
 const warn = logger.extend('warn');
 
 const STORIES_IMPORT = 'storiesOf';
+const CSF3_EXPORT_TITLE_FIELD = 'title';
 const STORIES_PACKAGE = '@storybook/react';
 const STORIES_FILE_RE = new RegExp(
   `([^${escapeRegExp(path.sep)}]+)\\.stories\\.tsx?$`,
@@ -107,6 +108,28 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     return node.kind === ts.SyntaxKind.CallExpression;
   }
 
+  private static isExportAssignment(
+    node: ts.Node,
+  ): node is ts.ExportAssignment {
+    return node.kind === ts.SyntaxKind.ExportAssignment;
+  }
+
+  private static isObjectLiteralExpression(
+    node: ts.Node,
+  ): node is ts.ObjectLiteralExpression {
+    return node.kind === ts.SyntaxKind.ObjectLiteralExpression;
+  }
+
+  private static isPropertyAssignment(
+    node: ts.Node,
+  ): node is ts.PropertyAssignment {
+    return node.kind === ts.SyntaxKind.PropertyAssignment;
+  }
+
+  private static isIdentifier(node: ts.Node): node is ts.Identifier {
+    return node.kind === ts.SyntaxKind.Identifier;
+  }
+
   private static walkStories(
     sourceFile: ts.SourceFile,
     callback: (storybook: Storybook) => void,
@@ -127,6 +150,27 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
         }
         callback(firstNode.text);
         return;
+      }
+
+      if (FeatureFileProcessor.isExportAssignment(node)) {
+        const { expression } = node;
+        if (
+          FeatureFileProcessor.isObjectLiteralExpression(expression) &&
+          expression.properties.length > 0
+        ) {
+          const property = expression.properties[0];
+          if (FeatureFileProcessor.isPropertyAssignment(property)) {
+            const { name, initializer } = property;
+            if (
+              FeatureFileProcessor.isIdentifier(name) &&
+              FeatureFileProcessor.isStringLiteral(initializer) &&
+              name.escapedText === CSF3_EXPORT_TITLE_FIELD
+            ) {
+              callback(initializer.text);
+              return;
+            }
+          }
+        }
       }
 
       ts.forEachChild(node, walkTree);
