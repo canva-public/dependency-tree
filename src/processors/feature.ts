@@ -47,32 +47,12 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     super(rootDir);
   }
 
-  private static isRegExpToken(
-    a: ts.Expression,
-  ): a is ts.RegularExpressionLiteral {
-    return (
-      typeof a === 'object' &&
-      typeof a.kind !== 'undefined' &&
-      typeof ((a as unknown) as Record<string, unknown>).text !== 'undefined' &&
-      a.kind === ts.SyntaxKind.RegularExpressionLiteral
-    );
-  }
-
-  private static isImportDeclaration(
-    node: ts.Node,
-  ): node is ts.ImportDeclaration {
-    return node.kind === ts.SyntaxKind.ImportDeclaration;
-  }
-
   private static isStoriesOf(node: ts.Node): boolean {
-    return (
-      node.kind === ts.SyntaxKind.Identifier &&
-      (node as ts.Identifier).text === STORIES_IMPORT
-    );
+    return ts.isIdentifier(node) && node.text === STORIES_IMPORT;
   }
 
   private static isStoriesImport(node: ts.Node): boolean {
-    if (!FeatureFileProcessor.isImportDeclaration(node)) {
+    if (!ts.isImportDeclaration(node)) {
       return false;
     }
 
@@ -100,36 +80,6 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     );
   }
 
-  private static isStringLiteral(node: ts.Node): node is ts.StringLiteral {
-    return node.kind === ts.SyntaxKind.StringLiteral;
-  }
-
-  private static isCallExpression(node: ts.Node): node is ts.CallExpression {
-    return node.kind === ts.SyntaxKind.CallExpression;
-  }
-
-  private static isExportAssignment(
-    node: ts.Node,
-  ): node is ts.ExportAssignment {
-    return node.kind === ts.SyntaxKind.ExportAssignment;
-  }
-
-  private static isObjectLiteralExpression(
-    node: ts.Node,
-  ): node is ts.ObjectLiteralExpression {
-    return node.kind === ts.SyntaxKind.ObjectLiteralExpression;
-  }
-
-  private static isPropertyAssignment(
-    node: ts.Node,
-  ): node is ts.PropertyAssignment {
-    return node.kind === ts.SyntaxKind.PropertyAssignment;
-  }
-
-  private static isIdentifier(node: ts.Node): node is ts.Identifier {
-    return node.kind === ts.SyntaxKind.Identifier;
-  }
-
   private static walkStories(
     sourceFile: ts.SourceFile,
     callback: (storybook: Storybook) => void,
@@ -138,11 +88,11 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
     const walkTree = (node: ts.Node): void => {
       if (
-        FeatureFileProcessor.isCallExpression(node) &&
+        ts.isCallExpression(node) &&
         FeatureFileProcessor.isStoriesOf(node.expression)
       ) {
         const firstNode = node.arguments[0];
-        if (!FeatureFileProcessor.isStringLiteral(firstNode)) {
+        if (!ts.isStringLiteral(firstNode)) {
           // TODO(joscha): we should support composites, etc. as well.
           throw new Error(
             'Only string literals in storiesOf(...) are supported',
@@ -152,18 +102,24 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
         return;
       }
 
-      if (FeatureFileProcessor.isExportAssignment(node)) {
-        const { expression } = node;
+      if (ts.isExportAssignment(node)) {
+        let { expression } = node;
         if (
-          FeatureFileProcessor.isObjectLiteralExpression(expression) &&
+          ts.isAsExpression(expression) ||
+          ts.isSatisfiesExpression(expression)
+        ) {
+          expression = expression.expression;
+        }
+        if (
+          ts.isObjectLiteralExpression(expression) &&
           expression.properties.length > 0
         ) {
           const property = expression.properties[0];
-          if (FeatureFileProcessor.isPropertyAssignment(property)) {
+          if (ts.isPropertyAssignment(property)) {
             const { name, initializer } = property;
             if (
-              FeatureFileProcessor.isIdentifier(name) &&
-              FeatureFileProcessor.isStringLiteral(initializer) &&
+              ts.isIdentifier(name) &&
+              ts.isStringLiteral(initializer) &&
               name.escapedText === CSF3_EXPORT_TITLE_FIELD
             ) {
               callback(initializer.text);
@@ -180,10 +136,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
       // Look for stories import first
       if (!importFound && FeatureFileProcessor.isStoriesImport(node)) {
         importFound = true;
-      } else if (
-        importFound &&
-        !FeatureFileProcessor.isImportDeclaration(node)
-      ) {
+      } else if (importFound && !ts.isImportDeclaration(node)) {
         // Look for `storiesOf` calls only if there was import
         walkTree(node);
       }
@@ -197,7 +150,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
     callback: (re: RegExp) => void,
   ) {
     const walk = (node: ts.Node) => {
-      if (FeatureFileProcessor.isCallExpression(node)) {
+      if (ts.isCallExpression(node)) {
         if (
           ts.isIdentifier(node.expression) &&
           // It assumed that we have steps defined only by calling following functions names
@@ -206,7 +159,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
           ) !== -1
         ) {
           const arg = node.arguments[0];
-          if (FeatureFileProcessor.isRegExpToken(arg)) {
+          if (ts.isRegularExpressionLiteral(arg)) {
             const match = RE_LITERAL_RE.exec(arg.text);
             if (match === null) {
               throw new Error(
