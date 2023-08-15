@@ -9,5 +9,6 @@ export default {
 } as Meta;
 
 export const Foo = {
+  parameters: { visreg: true },
   render: () => null,
 }
