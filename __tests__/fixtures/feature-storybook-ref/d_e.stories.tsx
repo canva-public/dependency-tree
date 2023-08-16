@@ -1,6 +1,6 @@
 // Copyright 2021 Canva Inc. All Rights Reserved.
 
-import { storiesOf, type Meta } from "@storybook/react";
+import { type Meta } from "@storybook/react";
 import * as React from "react";
 
 export default {

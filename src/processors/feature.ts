@@ -88,6 +88,8 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
 
     const walkTree = (node: ts.Node): void => {
       if (
+        // storiesOf syntax is used
+        importFound &&
         ts.isCallExpression(node) &&
         FeatureFileProcessor.isStoriesOf(node.expression)
       ) {
@@ -102,7 +104,8 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
         return;
       }
 
-      if (ts.isExportAssignment(node)) {
+      // no storiesOf syntax found, csf3 is assumed
+      if (!importFound && ts.isExportAssignment(node)) {
         let { expression } = node;
         if (
           ts.isAsExpression(expression) ||
@@ -136,8 +139,7 @@ export class FeatureFileProcessor extends TypeScriptFileProcessor {
       // Look for stories import first
       if (!importFound && FeatureFileProcessor.isStoriesImport(node)) {
         importFound = true;
-      } else if (importFound && !ts.isImportDeclaration(node)) {
-        // Look for `storiesOf` calls only if there was import
+      } else if (!ts.isImportDeclaration(node)) {
         walkTree(node);
       }
     };
