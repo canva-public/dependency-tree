@@ -6,3 +6,4 @@
  */
 
 /// <dependency-tree depends-on="./dep4.ejs" />
+/// <dependency-tree depends-on="./dir1/**/*" />

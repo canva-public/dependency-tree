@@ -43,7 +43,9 @@ The element can be closed at a new line:
 
 Available attributes:
 
-- **`depends-on="..."`** - contains a relative path to a dependency file.
+- **`depends-on="..."`**
+  - contains a relative path to a dependency file.
+  - or a relative path with glob pattern.
 
 Note that unavailable attributes will cause a validation error.
 
@@ -57,6 +59,14 @@ For the **[TypeScript]** codebase (`['.ts', '.tsx']` file extensions), we utiliz
 /// <dependency-tree depends-on="./dep1.sh" />
 resolve(__dirname, './dep1.sh');
 resolve(__dirname, './dep2.ts'); /// <dependency-tree depends-on="./dep2.js" />
+```
+
+directive comment can detect glob patterns:
+
+```typescript
+///<dependency-tree depends-on="./dir1/**/*" />
+resolve(__dirname, './dir1/dep5.py');
+resolve(__dirname, './dir1/dir2/dep6.md');
 ```
 
 Element's definition can be split into multiple lines:
@@ -79,6 +89,40 @@ The line below will be treated as a comment and not being parsed because of the 
 
 ```typescript
 // <dependency-tree invalid directive declaration example />
+```
+
+#### Example
+
+```bash
+root_dir/
+  |- index.js
+  |- dep1.sh
+  |- util.ts
+  |- dir1/
+      |- dep5.py
+      |- dir2/
+          |- dep6.md
+```
+
+```typescript
+// root_dir/util.ts
+
+/// <dependency-tree depends-on="./dep1.sh" />
+///<dependency-tree depends-on="./dir1/**/*" />
+```
+
+```typescript
+// index.js
+const dependencyTree = new DependencyTree(['root_dir']);
+const result = await dependencyTree.gather();
+const dependencies = result.resolved;
+//{
+//  "root_dir/util.ts" => Set {
+//    "root_dir/dep1.sh",
+//    "root_dir/dir1/dep5.py",
+//    "root_dir/dir1/dir2/dep6.md",
+// },
+//}
 ```
 
 [xml]: https://www.w3schools.com/xml/
